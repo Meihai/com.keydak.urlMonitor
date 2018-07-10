@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="error">
+
+    <appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <ThresholdFilter level="trace" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level - %msg%xEx%n"/>
+            <!--%class{36} %L %M-->
+        </Console>
+
+        <File name="logFile" fileName="/user/local/web_logs/urlmonitor/urlmonitor_tmp.log" append="false">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level - %msg%xEx%n"/>
+        </File>
+
+        <Async name="AsyncFile">
+            <AppenderRef ref="logFile"/>
+        </Async>
+
+        <RollingFile name="RollingFile" fileName="/user/local/web_logs/urlmonitor/urlmonitor.log"
+                     filePattern="cloud/logs/$${date:yyyy-MM}/app-%d{MM-dd-yyyy}-%i.log.gz">
+            <PatternLayout pattern="%d{yyyy.MM.dd 'at' HH:mm:ss z} %-5level - %msg%xEx%n"/>
+            <SizeBasedTriggeringPolicy size="500 MB" />
+        </RollingFile>
+
+        <Async name="AsyncRollingFile">
+            <AppenderRef ref="RollingFile"/>
+        </Async>
+
+    </appenders>
+
+    <loggers>
+        <Root level="trace">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="AsyncFile"/>
+            <AppenderRef ref="AsyncRollingFile"/>
+        </Root>
+    </loggers>
+</configuration>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans 
+       http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context 
+       http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/mvc 
+       http://www.springframework.org/schema/mvc/spring-mvc.xsd http://www.springframework.org/schema/aop 
+       http://www.springframework.org/schema/aop/spring-aop-4.0.xsd">
+    <import resource="spring_database.xml"/>
+    <import resource="spring_service.xml"/>
+    <import resource="spring_business.xml"/>
+
+
+    <!-- 启动对@AspectJ注解的支持 -->
+    <aop:aspectj-autoproxy/>
+    <!-- 通知spring使用cglib而不是jdk的来生成代理方法 AOP可以拦截到Controller -->
+    <aop:aspectj-autoproxy proxy-target-class="true"/>
+
+    <!-- 启动时扫描所有的controller -->
+    <context:annotation-config/>
+    <context:component-scan base-package="com.keydak.urlmonitor.*"/>
+
+    <mvc:annotation-driven >
+        <!--配置@ResponseBody由fastjson解析-->
+        <mvc:message-converters>
+            <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+                <property name="defaultCharset" value="UTF-8"/>
+            </bean>
+            <!--<bean class="com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter4"/>-->
+            <!--对ajax提交,数据封装到requestBody中有效-->
+            <bean id="mappingJackson2HttpMessageConverter" class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+                <property name="objectMapper">
+                    <bean  class="com.fasterxml.jackson.databind.ObjectMapper">
+                        <property name="dateFormat">
+                            <bean class="com.keydak.urlmonitor.utils.MyDateFormat">
+                            </bean>
+                        </property>
+                    </bean>
+                </property>
+                <property name="supportedMediaTypes">
+                    <list>
+                        <value>text/html;charset=UTF-8</value>
+                        <value>application/json;charset=UTF-8</value>
+                    </list>
+                </property>
+            </bean>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+
+    <mvc:default-servlet-handler/>
+    <bean id="fastJsonpResponseBodyAdvice"
+          class="com.alibaba.fastjson.support.spring.FastJsonpResponseBodyAdvice">
+        <constructor-arg>
+            <list>
+                <value>callback</value>
+                <value>jsonp</value>
+            </list>
+        </constructor-arg>
+    </bean>
+
+
+    <!-- 配置js,css等静态文件直接映射到对应的文件夹，不被DispatcherServlet处理 -->
+    <!--<mvc:resources location="/WEB-INF/resources/**" mapping="/resources" />-->
+
+    <!-- jsp页面解析器，当Controller返回XXX字符串时，先通过拦截器，然后该类就会在/WEB-INF/views/目录下，查找XXX.jsp文件 -->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/views/"/>
+        <property name="suffix" value=".jsp"/>
+    </bean>
+
+    <!-- 第三步：注册处理器映射器/处理器适配器 ，添加conversion-service属性-->
+    <mvc:annotation-driven conversion-service="conversionService"/>
+
+    <!-- 第二步： 创建convertion-Service ，并注入dateConvert-->
+    <bean id="conversionService" class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+        <property name="converters">
+            <set>
+                <ref bean="dateConvert"/>
+            </set>
+        </property>
+    </bean>
+    <!-- 第一步:  创建自定义日期转换规则 -->
+    <bean id="dateConvert" class="com.keydak.urlmonitor.utils.DateConvert"/>
+</beans>

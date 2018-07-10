@@ -1,0 +1,13 @@
+rootProject.name = 'com.keydak.urlmonitor'
+include 'web'
+include 'services'
+include ':cache'
+project(':cache').projectDir = new File("../Modules/cache")
+include ':utils'
+project(':utils').projectDir = new File("../Modules/utils")
+include ':database'
+project(':database').projectDir = new File("../Modules/database")
+include 'constant'
+include 'business'
+include 'urldatabase'
+
